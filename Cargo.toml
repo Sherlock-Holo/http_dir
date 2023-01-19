@@ -2,8 +2,18 @@
 name = "http_dir"
 version = "0.1.0"
 edition = "2021"
+authors = ["Sherlock Holo <sherlockya@gmail.com>"]
+readme = "README.md"
+keywords = ["http"]
+license = "MIT"
+repository = "https://github.com/Sherlock-Holo/http_dir"
+rust-version = "1.68"
+description = "HTTP file server"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[package.metadata.docs.rs]
+features = ["__internal_test"]
 
 [[example]]
 name = "disk"
