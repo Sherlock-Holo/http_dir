@@ -1,0 +1,47 @@
+[package]
+name = "http_dir"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[example]]
+name = "disk"
+required-features = ["disk"]
+
+[[example]]
+name = "include_dir"
+required-features = ["include_dir"]
+
+[dependencies]
+tower-service = "0.3"
+http = "0.2"
+bytes = "1"
+http-body = "0.4"
+pin-project = "1"
+futures-util = { version = "0.3" }
+httpdate = "1"
+mime_guess = "2"
+http-range-header = "0.3"
+tokio = { version = "1", features = ["io-util"] }
+tokio-util = { version = "0.7", features = ["io"] }
+percent-encoding = "2"
+tower-http = { version = "0.3", features = ["set-status"] }
+include_dir = { version = "0.7", optional = true }
+
+[features]
+default = ["disk", "include-dir"]
+compression-gzip = []
+compression-br = []
+compression-deflate = []
+disk = ["tokio/fs"]
+include-dir = ["include_dir/metadata"]
+__internal_test = ["compression-gzip", "compression-br", "compression-deflate", "disk", "include-dir"]
+
+[dev-dependencies]
+tokio = { version = "1", features = ["io-util", "rt", "macros"] }
+hyper = { version = "0.14", features = ["server", "runtime", "tcp", "http1"] }
+tower = { version = "0.4", features = ["make", "util"] }
+tower-http = { version = "0.3", features = ["fs"] }
+brotli = "3"
+flate2 = "1"
