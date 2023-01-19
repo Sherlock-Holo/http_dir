@@ -10,6 +10,7 @@ use tokio::io::{AsyncRead, AsyncSeek, ReadBuf};
 
 use crate::fs::{FileExt, Filesystem, Metadata};
 
+/// A [`include_dir`](https://docs.rs/include_dir/latest/include_dir) based file wrapper
 pub struct IncludeDirFile {
     index: usize,
     file: &'static File<'static>,
@@ -95,12 +96,14 @@ impl IncludeDirFile {
     }
 }
 
+/// A [`include_dir`](https://docs.rs/include_dir/latest/include_dir) based filesystem implement
 #[derive(Debug, Clone)]
 pub struct IncludeDirFilesystem {
     dir: Dir<'static>,
 }
 
 impl IncludeDirFilesystem {
+    /// create [`IncludeDirFilesystem`] from a [`Dir`]
     pub fn new(dir: Dir<'static>) -> Self {
         Self { dir }
     }

@@ -35,7 +35,7 @@ pub mod fs;
 // default capacity 64KiB
 const DEFAULT_CAPACITY: usize = 65536;
 
-pub type ResponseBody = UnsyncBoxBody<Bytes, io::Error>;
+type ResponseBody = UnsyncBoxBody<Bytes, io::Error>;
 
 /// Service that serves files from a given directory and all its sub directories.
 ///

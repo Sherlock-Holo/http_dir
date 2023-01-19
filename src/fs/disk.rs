@@ -11,6 +11,7 @@ use tokio::io::{AsyncRead, AsyncSeek, ReadBuf};
 
 use crate::fs::{FileExt, Filesystem, Metadata};
 
+/// A [`tokio`](https://docs.rs/tokio/latest/tokio/) based disk file wrapper
 #[derive(Debug)]
 pub struct DiskFile(File);
 
@@ -53,6 +54,7 @@ impl FileExt for DiskFile {
     }
 }
 
+/// A [`tokio`](https://docs.rs/tokio/latest/tokio/) based disk filesystem implement
 #[derive(Debug, Clone)]
 pub struct DiskFilesystem {
     base: PathBuf,
@@ -77,6 +79,7 @@ impl From<PathBuf> for DiskFilesystem {
 }
 
 impl DiskFilesystem {
+    /// create [`DiskFilesystem`] by base path
     pub fn new(base: PathBuf) -> Self {
         Self { base }
     }
