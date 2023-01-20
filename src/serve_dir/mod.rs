@@ -11,7 +11,7 @@ use bytes::Bytes;
 use futures_util::TryFutureExt;
 use http::header::ALLOW;
 use http::{header, HeaderValue, Method, Request, Response, StatusCode};
-use http_body::{combinators::UnsyncBoxBody, Body, Empty, Full};
+use http_body::{Body, Empty, Full};
 use percent_encoding::percent_decode;
 use tokio::io::AsyncRead;
 use tower_http::set_status::SetStatus;
@@ -21,16 +21,14 @@ use tower_service::Service;
 pub use crate::async_body::AsyncReadBody;
 use crate::content_encoding::{encodings, SupportedEncodings};
 use crate::fs::Filesystem;
-use crate::open_file;
 use crate::open_file::{FileOpened, FileRequestExtent, OpenFileOutput};
+use crate::{open_file, ResponseBody};
 
 #[cfg(test)]
 mod tests;
 
 // default capacity 64KiB
 const DEFAULT_CAPACITY: usize = 65536;
-
-pub(crate) type ResponseBody = UnsyncBoxBody<Bytes, io::Error>;
 
 /// Service that serves files from a given directory and all its sub directories.
 ///

@@ -12,7 +12,7 @@ use tower_service::Service;
 
 use crate::fs::single_file::SingleFileFilesystem;
 use crate::fs::Filesystem;
-use crate::serve_dir::ResponseBody;
+use crate::ResponseBody;
 use crate::{DefaultServeDirFallback, ServeDir};
 
 /// Service that serves a file

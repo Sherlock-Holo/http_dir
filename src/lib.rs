@@ -29,6 +29,10 @@
 //! # };
 //! ```
 
+use std::io;
+
+use bytes::Bytes;
+use http_body::combinators::UnsyncBoxBody;
 pub use serve_dir::{DefaultServeDirFallback, ServeDir};
 pub use serve_file::ServeFile;
 
@@ -39,3 +43,5 @@ mod headers;
 mod open_file;
 mod serve_dir;
 mod serve_file;
+
+pub type ResponseBody = UnsyncBoxBody<Bytes, io::Error>;
