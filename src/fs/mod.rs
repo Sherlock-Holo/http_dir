@@ -13,6 +13,7 @@ pub mod disk;
 #[cfg(feature = "include-dir")]
 /// a [`include_dir`](https://docs.rs/include_dir/latest/include_dir) based implement
 pub mod include_dir;
+pub(crate) mod single_file;
 
 /// A simple Metadata
 #[derive(Debug, Clone)]

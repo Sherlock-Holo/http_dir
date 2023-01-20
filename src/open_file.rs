@@ -15,6 +15,7 @@ use tokio::io::AsyncSeekExt;
 use super::headers::{IfModifiedSince, IfUnmodifiedSince, LastModified};
 use crate::content_encoding::{Encoding, QValue};
 use crate::fs::{FileExt, Filesystem, Metadata};
+use crate::serve_dir::ServeVariant;
 
 pub(super) enum OpenFileOutput<IO> {
     FileOpened(Box<FileOpened<IO>>),
@@ -40,7 +41,7 @@ pub(super) enum FileRequestExtent<IO> {
 
 pub(super) async fn open_file<FS: Filesystem>(
     filesystem: &mut FS,
-    append_index_html_on_directories: bool,
+    variant: &ServeVariant,
     mut path_to_file: PathBuf,
     req: Request<Empty<Bytes>>,
     negotiated_encodings: Vec<(Encoding, QValue)>,
@@ -57,21 +58,30 @@ pub(super) async fn open_file<FS: Filesystem>(
         .get(header::IF_MODIFIED_SINCE)
         .and_then(IfModifiedSince::from_header_value);
 
-    if let Some(output) = maybe_redirect_or_append_path(
-        filesystem,
-        &mut path_to_file,
-        req.uri(),
-        append_index_html_on_directories,
-    )
-    .await
-    {
-        return Ok(output);
-    }
+    let mime = match variant {
+        ServeVariant::Directory {
+            append_index_html_on_directories,
+        } => {
+            if let Some(output) = maybe_redirect_or_append_path(
+                filesystem,
+                &mut path_to_file,
+                req.uri(),
+                *append_index_html_on_directories,
+            )
+            .await
+            {
+                return Ok(output);
+            }
 
-    let mime = mime_guess::from_path(&path_to_file)
-        .first_raw()
-        .map(HeaderValue::from_static)
-        .unwrap_or_else(|| HeaderValue::from_str(mime::APPLICATION_OCTET_STREAM.as_ref()).unwrap());
+            mime_guess::from_path(&path_to_file)
+                .first_raw()
+                .map(HeaderValue::from_static)
+                .unwrap_or_else(|| {
+                    HeaderValue::from_str(mime::APPLICATION_OCTET_STREAM.as_ref()).unwrap()
+                })
+        }
+        ServeVariant::SingleFile { mime } => mime.clone(),
+    };
 
     if req.method() == Method::HEAD {
         let (meta, maybe_encoding) =
