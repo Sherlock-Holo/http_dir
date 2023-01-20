@@ -1,5 +1,33 @@
 #![feature(type_alias_impl_trait)]
 
+//! HTTP file server, to access files on the [`Filesystem`]. User can implement own [`Filesystem`],
+//! also can use [`DiskFilesystem`](fs::disk::DiskFilesystem) or
+//! [`IncludeDirFilesystem`](fs::include_dir::IncludeDirFilesystem) directly
+//!
+//! # Note
+//!
+//! This crate require [TAIT](http_dir) feature, it will be stable soon but now it is a nightly
+//! feature
+//!
+//! # Example
+//! ```
+//! use http_dir::ServeDir;
+//! use http_dir::fs::disk::DiskFilesystem;
+//!
+//! // This will serve files in the "assets" directory and
+//! // its subdirectories
+//! let service = ServeDir::new(DiskFilesystem::from("assets"));
+//!
+//! # async {
+//! // Run our service using `hyper`
+//! let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 3000));
+//! hyper::Server::bind(&addr)
+//!     .serve(tower::make::Shared::new(service))
+//!     .await
+//!     .expect("server error");
+//! # };
+//! ```
+
 use std::error::Error;
 use std::future::{Future, Ready};
 use std::{

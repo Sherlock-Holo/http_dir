@@ -1,4 +1,4 @@
-//! Allow user implement own filesystem, to provide file for the [`ServeDir`]
+//! Allow user implement own filesystem, to provide file for the [`ServeDir`](crate::ServeDir)
 
 use std::future::Future;
 use std::io;
