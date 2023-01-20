@@ -150,3 +150,42 @@ where
         self.inner.call(req)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use http::StatusCode;
+    use http_body::Body as HttpBody;
+    use hyper::Body;
+    use tower::ServiceExt;
+
+    use super::*;
+    use crate::fs::disk::DiskFilesystem;
+
+    #[tokio::test]
+    async fn basic() {
+        let svc = ServeFile::new("README.md", DiskFilesystem::from("."));
+
+        let req = Request::builder()
+            .uri("/README.md")
+            .body(Body::empty())
+            .unwrap();
+        let res = svc.oneshot(req).await.unwrap();
+
+        assert_eq!(res.status(), StatusCode::OK);
+        assert_eq!(res.headers()["content-type"], "text/markdown");
+
+        let body = body_into_text(res.into_body()).await;
+
+        let contents = std::fs::read_to_string("./README.md").unwrap();
+        assert_eq!(body, contents);
+    }
+
+    async fn body_into_text<B>(body: B) -> String
+    where
+        B: HttpBody<Data = Bytes> + Unpin,
+        B::Error: std::fmt::Debug,
+    {
+        let bytes = hyper::body::to_bytes(body).await.unwrap();
+        String::from_utf8(bytes.to_vec()).unwrap()
+    }
+}

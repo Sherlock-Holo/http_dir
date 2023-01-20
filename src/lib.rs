@@ -39,5 +39,3 @@ mod headers;
 mod open_file;
 mod serve_dir;
 mod serve_file;
-#[cfg(test)]
-mod tests;

@@ -558,7 +558,7 @@ async fn last_modified() {
 
     let res = svc.oneshot(req).await.unwrap();
     assert_eq!(res.status(), StatusCode::OK);
-    let readme_bytes = include_bytes!("../README.md");
+    let readme_bytes = include_bytes!("../../README.md");
     let body = res.into_body().data().await.unwrap().unwrap();
     assert_eq!(body.as_ref(), readme_bytes);
 

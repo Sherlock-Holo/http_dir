@@ -24,6 +24,9 @@ use crate::fs::Filesystem;
 use crate::open_file;
 use crate::open_file::{FileOpened, FileRequestExtent, OpenFileOutput};
 
+#[cfg(test)]
+mod tests;
+
 // default capacity 64KiB
 const DEFAULT_CAPACITY: usize = 65536;
 
