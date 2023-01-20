@@ -10,11 +10,10 @@ use http_body::Body as HttpBody;
 use hyper::Body;
 use include_dir::Dir;
 use tower::{service_fn, ServiceExt};
-use tower_http::services::ServeFile;
 
 use crate::fs::disk::DiskFilesystem;
 use crate::fs::include_dir::IncludeDirFilesystem;
-use crate::ServeDir;
+use crate::{ServeDir, ServeFile};
 
 #[tokio::test]
 async fn basic() {
@@ -560,7 +559,7 @@ async fn last_modified() {
 
     let res = svc.oneshot(req).await.unwrap();
     assert_eq!(res.status(), StatusCode::OK);
-    let readme_bytes = include_bytes!("../../README.md");
+    let readme_bytes = include_bytes!("../README.md");
     let body = res.into_body().data().await.unwrap().unwrap();
     assert_eq!(body.as_ref(), readme_bytes);
 
@@ -616,7 +615,8 @@ async fn with_fallback_svc() {
 
 #[tokio::test]
 async fn with_fallback_serve_file() {
-    let svc = ServeDir::new(DiskFilesystem::from(".")).fallback(ServeFile::new("./README.md"));
+    let filesystem = DiskFilesystem::from(".");
+    let svc = ServeDir::new(filesystem.clone()).fallback(ServeFile::new("README.md", filesystem));
 
     let req = Request::builder()
         .uri("/doesnt-exist")
@@ -732,4 +732,42 @@ async fn include_dir_basic_with_index() {
 
     let body = body_into_text(res.into_body()).await;
     assert_eq!(body, "<b>HTML!</b>\n");
+}
+
+#[tokio::test]
+async fn serve_file_basic() {
+    let svc = ServeFile::new("README.md", DiskFilesystem::from("."));
+
+    let req = Request::builder()
+        .uri("/README.md")
+        .body(Body::empty())
+        .unwrap();
+    let res = svc.oneshot(req).await.unwrap();
+
+    assert_eq!(res.status(), StatusCode::OK);
+    assert_eq!(res.headers()["content-type"], "text/markdown");
+
+    let body = body_into_text(res.into_body()).await;
+
+    let contents = std::fs::read_to_string("./README.md").unwrap();
+    assert_eq!(body, contents);
+}
+
+#[tokio::test]
+async fn serve_file_not_found() {
+    let svc = ServeFile::new("README.md", DiskFilesystem::from("."));
+
+    let req = Request::builder()
+        .uri("/not-exist")
+        .body(Body::empty())
+        .unwrap();
+    let res = svc.oneshot(req).await.unwrap();
+
+    assert_eq!(res.status(), StatusCode::OK);
+    assert_eq!(res.headers()["content-type"], "text/markdown");
+
+    let body = body_into_text(res.into_body()).await;
+
+    let contents = std::fs::read_to_string("./README.md").unwrap();
+    assert_eq!(body, contents);
 }

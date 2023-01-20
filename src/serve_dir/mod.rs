@@ -24,9 +24,6 @@ use crate::fs::Filesystem;
 use crate::open_file::{FileOpened, FileRequestExtent, OpenFileOutput};
 use crate::{open_file, ResponseBody};
 
-#[cfg(test)]
-mod tests;
-
 // default capacity 64KiB
 const DEFAULT_CAPACITY: usize = 65536;
 
@@ -188,13 +185,14 @@ impl<FS, F> ServeDir<FS, F> {
     /// This can be used to respond with a different file:
     ///
     /// ```rust
-    /// use http_dir::ServeDir;
+    /// use http_dir::{ServeDir, ServeFile};
     /// use http_dir::fs::disk::DiskFilesystem;
-    /// use tower_http::services::ServeFile;
     ///
-    /// let service = ServeDir::new(DiskFilesystem::from("assets"))
+    /// let filesystem = DiskFilesystem::from("assets");
+    ///
+    /// let service = ServeDir::new(filesystem.clone())
     ///     // respond with `not_found.html` for missing files
-    ///     .fallback(ServeFile::new("assets/not_found.html"));
+    ///     .fallback(ServeFile::new("not_found.html", filesystem));
     ///
     /// # async {
     /// // Run our service using `hyper`
@@ -225,13 +223,14 @@ impl<FS, F> ServeDir<FS, F> {
     /// This can be used to respond with a different file:
     ///
     /// ```rust
-    /// use http_dir::ServeDir;
+    /// use http_dir::{ServeDir, ServeFile};
     /// use http_dir::fs::disk::DiskFilesystem;
-    /// use tower_http::services::ServeFile;
     ///
-    /// let service = ServeDir::new(DiskFilesystem::from("assets"))
+    /// let filesystem = DiskFilesystem::from("assets");
+    ///
+    /// let service = ServeDir::new(filesystem.clone())
     ///     // respond with `404 Not Found` and the contents of `not_found.html` for missing files
-    ///     .not_found_service(ServeFile::new("assets/not_found.html"));
+    ///     .not_found_service(ServeFile::new("/not_found.html", filesystem));
     ///
     /// # async {
     /// // Run our service using `hyper`
