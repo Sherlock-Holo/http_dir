@@ -8,10 +8,12 @@ use http::{header, Method, Response};
 use http::{Request, StatusCode};
 use http_body::Body as HttpBody;
 use hyper::Body;
+use include_dir::Dir;
 use tower::{service_fn, ServiceExt};
 use tower_http::services::ServeFile;
 
 use crate::fs::disk::DiskFilesystem;
+use crate::fs::include_dir::IncludeDirFilesystem;
 use crate::ServeDir;
 
 #[tokio::test]
@@ -714,4 +716,20 @@ async fn calls_fallback_on_invalid_paths() {
     let res = svc.oneshot(req).await.unwrap();
 
     assert_eq!(res.headers()["from-fallback"], "1");
+}
+
+#[tokio::test]
+async fn include_dir_basic_with_index() {
+    static ROOT: Dir<'_> = include_dir::include_dir!("test-files");
+
+    let svc = ServeDir::new(IncludeDirFilesystem::new(ROOT.clone()));
+
+    let req = Request::new(Body::empty());
+    let res = svc.oneshot(req).await.unwrap();
+
+    assert_eq!(res.status(), StatusCode::OK);
+    assert_eq!(res.headers()[header::CONTENT_TYPE], "text/html");
+
+    let body = body_into_text(res.into_body()).await;
+    assert_eq!(body, "<b>HTML!</b>\n");
 }

@@ -3,7 +3,7 @@ use std::io;
 use std::io::{Error, ErrorKind, SeekFrom};
 use std::path::Path;
 use std::pin::Pin;
-use std::task::{Context, Poll};
+use std::task::{ready, Context, Poll};
 
 use include_dir::{Dir, DirEntry, File};
 use tokio::io::{AsyncRead, AsyncSeek, ReadBuf};
@@ -19,7 +19,7 @@ pub struct IncludeDirFile {
 impl AsyncRead for IncludeDirFile {
     #[inline]
     fn poll_read(
-        self: Pin<&mut Self>,
+        mut self: Pin<&mut Self>,
         cx: &mut Context<'_>,
         buf: &mut ReadBuf<'_>,
     ) -> Poll<io::Result<()>> {
@@ -29,7 +29,15 @@ impl AsyncRead for IncludeDirFile {
         }
         data = &data[self.index..];
 
-        Pin::new(&mut data).poll_read(cx, buf)
+        let before_filled = buf.filled().len();
+
+        ready!(Pin::new(&mut data).poll_read(cx, buf))?;
+
+        let filled = buf.filled().len() - before_filled;
+
+        self.index += filled;
+
+        Poll::Ready(Ok(()))
     }
 }
 
@@ -131,6 +139,12 @@ impl Filesystem for IncludeDirFilesystem {
     }
 
     fn is_dir<'a>(&'a self, path: &'a Path) -> Self::IsDir<'a> {
+        // include_dir won't handle . path, but actually this means current dir, when path is
+        // empty, means want to access the .
+        if path.as_os_str().is_empty() {
+            return ready(Ok(true));
+        }
+
         ready(
             self.dir
                 .get_entry(path)

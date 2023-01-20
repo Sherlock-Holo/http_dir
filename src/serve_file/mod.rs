@@ -180,6 +180,19 @@ mod tests {
         assert_eq!(body, contents);
     }
 
+    #[tokio::test]
+    async fn not_found() {
+        let svc = ServeFile::new("README.md", DiskFilesystem::from("."));
+
+        let req = Request::builder()
+            .uri("/not-exist")
+            .body(Body::empty())
+            .unwrap();
+        let res = svc.oneshot(req).await.unwrap();
+
+        assert_eq!(res.status(), StatusCode::NOT_FOUND);
+    }
+
     async fn body_into_text<B>(body: B) -> String
     where
         B: HttpBody<Data = Bytes> + Unpin,
