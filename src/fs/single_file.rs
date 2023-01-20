@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 
 use crate::fs::{Filesystem, Metadata};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SingleFileFilesystem<F> {
     file_path: PathBuf,
     filesystem: F,
