@@ -22,7 +22,7 @@ impl<F> SingleFileFilesystem<F> {
 
 impl<F> Filesystem for SingleFileFilesystem<F>
 where
-    for<'a> F: Filesystem + Send + Sync + 'a,
+    F: Filesystem + Send + Sync + 'static,
 {
     type File = F::File;
     type OpenFile<'a> = impl Future<Output=io::Result<Self::File>> + Send + Sync + 'a where Self: 'a;

@@ -18,14 +18,14 @@ use crate::{DefaultServeDirFallback, ServeDir};
 /// Service that serves a file
 #[derive(Debug, Clone)]
 pub struct ServeFile<FS, F = DefaultServeDirFallback> {
-    inner: ServeDir<FS, F>,
+    inner: ServeDir<SingleFileFilesystem<FS>, F>,
 }
 
 impl<FS> ServeFile<FS, DefaultServeDirFallback> {
     /// Create a new ServeFile.
     ///
     /// The Content-Type will be guessed from the file extension.
-    pub fn new<P: Into<PathBuf>>(path: P, filesystem: FS) -> ServeFile<SingleFileFilesystem<FS>> {
+    pub fn new<P: Into<PathBuf>>(path: P, filesystem: FS) -> Self {
         let path = path.into();
 
         let guess = mime_guess::from_path(&path);
@@ -46,11 +46,7 @@ impl<FS> ServeFile<FS, DefaultServeDirFallback> {
     /// # Panics
     /// Will panic if the mime type isn’t a valid
     /// [header value](https://docs.rs/http/latest/http/header/struct.HeaderValue.html).
-    pub fn new_with_mime<P: Into<PathBuf>>(
-        path: P,
-        mime: &Mime,
-        filesystem: FS,
-    ) -> ServeFile<SingleFileFilesystem<FS>> {
+    pub fn new_with_mime<P: Into<PathBuf>>(path: P, mime: &Mime, filesystem: FS) -> Self {
         let mime = HeaderValue::from_str(mime.as_ref()).expect("mime isn't a valid header value");
 
         ServeFile {
@@ -133,7 +129,7 @@ where
     F::Future: Send,
     FResBody: Body<Data = Bytes> + Send + 'static,
     FResBody::Error: Into<Box<dyn Error + Send + Sync>>,
-    FS: Filesystem + Clone + Send + Sync,
+    FS: Filesystem + Clone + Send + Sync + 'static,
     FS::File: 'static,
 {
     type Response = Response<ResponseBody>;
