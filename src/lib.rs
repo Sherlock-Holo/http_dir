@@ -1,4 +1,4 @@
-#![feature(type_alias_impl_trait)]
+#![feature(impl_trait_in_assoc_type)]
 
 //! HTTP file server, to access files on the [`Filesystem`]. User can implement own [`Filesystem`],
 //! also can use [`DiskFilesystem`](fs::disk::DiskFilesystem) or

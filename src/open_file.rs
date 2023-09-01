@@ -227,7 +227,7 @@ async fn open_file_with_fallback<FS: Filesystem>(
 // preferred order. If none of the negotiated_encodings have a corresponding precompressed
 // file the uncompressed file is used as a fallback.
 async fn file_metadata_with_fallback<FS: Filesystem>(
-    filesystem: &mut FS,
+    filesystem: &FS,
     mut path: PathBuf,
     mut negotiated_encoding: Vec<(Encoding, QValue)>,
 ) -> io::Result<(Metadata, Option<Encoding>)> {
@@ -252,7 +252,7 @@ async fn file_metadata_with_fallback<FS: Filesystem>(
 }
 
 async fn maybe_redirect_or_append_path<FS: Filesystem>(
-    filesystem: &mut FS,
+    filesystem: &FS,
     path_to_file: &mut PathBuf,
     uri: &Uri,
     append_index_html_on_directories: bool,

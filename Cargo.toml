@@ -7,7 +7,7 @@ readme = "README.md"
 keywords = ["http"]
 license = "MIT"
 repository = "https://github.com/Sherlock-Holo/http_dir"
-rust-version = "1.68"
+rust-version = "1.72"
 description = "HTTP file server"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -32,11 +32,11 @@ pin-project = "1"
 futures-util = { version = "0.3" }
 httpdate = "1"
 mime_guess = "2"
-http-range-header = "0.3"
+http-range-header = "0.4"
 tokio = { version = "1", features = ["io-util"] }
 tokio-util = { version = "0.7", features = ["io"] }
 percent-encoding = "2"
-tower-http = { version = "0.3", features = ["set-status"] }
+tower-http = { version = "0.4", features = ["set-status"] }
 include_dir = { version = "0.7", optional = true }
 
 [features]
