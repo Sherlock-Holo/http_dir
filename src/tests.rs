@@ -364,7 +364,7 @@ async fn redirect_to_trailing_slash_on_dir() {
 
     assert_eq!(res.status(), StatusCode::TEMPORARY_REDIRECT);
 
-    let location = &res.headers()[http::header::LOCATION];
+    let location = &res.headers()[header::LOCATION];
     assert_eq!(location, "/src/");
 }
 
@@ -463,14 +463,14 @@ async fn read_partial_in_bounds() {
 }
 
 #[tokio::test]
-async fn read_partial_rejects_out_of_bounds_range() {
-    let svc = ServeDir::new(DiskFilesystem::from("."));
+async fn read_partial_truncate_out_of_bounds_range() {
+    let svc = ServeDir::new(DiskFilesystem::from("./test-files"));
     let bytes_start_incl = 0;
     let bytes_end_excl = 9999999;
     let requested_len = bytes_end_excl - bytes_start_incl;
 
     let req = Request::builder()
-        .uri("/README.md")
+        .uri("/index.html")
         .header(
             "Range",
             format!("bytes={}-{}", bytes_start_incl, requested_len - 1),
@@ -479,8 +479,26 @@ async fn read_partial_rejects_out_of_bounds_range() {
         .unwrap();
     let res = svc.oneshot(req).await.unwrap();
 
+    assert_eq!(res.status(), StatusCode::PARTIAL_CONTENT);
+    let file_contents = std::fs::read("./test-files/index.html").unwrap();
+    assert_eq!(
+        res.headers()["content-range"],
+        &format!("bytes 0-12/{}", file_contents.len())
+    )
+}
+
+#[tokio::test]
+async fn read_partial_rejects_out_of_bounds_range() {
+    let svc = ServeDir::new(DiskFilesystem::from("./test-files"));
+    let req = Request::builder()
+        .uri("/index.html")
+        .header("Range", format!("bytes={}-{}", 99999, 99999999))
+        .body(Body::empty())
+        .unwrap();
+    let res = svc.oneshot(req).await.unwrap();
+
     assert_eq!(res.status(), StatusCode::RANGE_NOT_SATISFIABLE);
-    let file_contents = std::fs::read("./README.md").unwrap();
+    let file_contents = std::fs::read("./test-files/index.html").unwrap();
     assert_eq!(
         res.headers()["content-range"],
         &format!("bytes */{}", file_contents.len())
@@ -599,7 +617,7 @@ async fn with_fallback_svc() {
         ))))
     }
 
-    let svc = ServeDir::new(DiskFilesystem::from(".")).fallback(tower::service_fn(fallback));
+    let svc = ServeDir::new(DiskFilesystem::from(".")).fallback(service_fn(fallback));
 
     let req = Request::builder()
         .uri("/doesnt-exist")
@@ -659,7 +677,7 @@ async fn calling_fallback_on_not_allowed() {
 
     let svc = ServeDir::new(DiskFilesystem::from("."))
         .call_fallback_on_method_not_allowed(true)
-        .fallback(tower::service_fn(fallback));
+        .fallback(service_fn(fallback));
 
     let req = Request::builder()
         .method(Method::POST)
@@ -685,7 +703,7 @@ async fn with_fallback_svc_and_not_append_index_html_on_directories() {
 
     let svc = ServeDir::new(DiskFilesystem::from("."))
         .append_index_html_on_directories(false)
-        .fallback(tower::service_fn(fallback));
+        .fallback(service_fn(fallback));
 
     let req = Request::builder().uri("/").body(Body::empty()).unwrap();
     let res = svc.oneshot(req).await.unwrap();
@@ -699,7 +717,7 @@ async fn with_fallback_svc_and_not_append_index_html_on_directories() {
 // https://github.com/tower-rs/tower-http/issues/308
 #[tokio::test]
 async fn calls_fallback_on_invalid_paths() {
-    async fn fallback<T>(_: T) -> Result<Response<Body>, std::io::Error> {
+    async fn fallback<T>(_: T) -> Result<Response<Body>, io::Error> {
         let mut res = Response::new(Body::empty());
         res.headers_mut()
             .insert("from-fallback", "1".parse().unwrap());
